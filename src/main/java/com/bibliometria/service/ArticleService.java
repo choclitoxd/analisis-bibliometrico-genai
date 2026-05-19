@@ -14,13 +14,20 @@ public class ArticleService {
     private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
     private final List<ArticleProvider> providers;
     private final FileExportUtil exportUtil;
+    private final FrequencyAnalysisService frequencyAnalysisService;
+    private final KeywordDiscoveryService keywordDiscoveryService;
 
-    public ArticleService(List<ArticleProvider> providers, FileExportUtil exportUtil) {
+    public ArticleService(List<ArticleProvider> providers, 
+                          FileExportUtil exportUtil, 
+                          FrequencyAnalysisService frequencyAnalysisService,
+                          KeywordDiscoveryService keywordDiscoveryService) {
         this.providers = providers;
         this.exportUtil = exportUtil;
+        this.frequencyAnalysisService = frequencyAnalysisService;
+        this.keywordDiscoveryService = keywordDiscoveryService;
     }
 
-    public Map<String, Integer> procesarExtraccion(String query) {
+    public Map<String, Object> procesarExtraccion(String query) {
         log.info("Iniciando proceso de extracción para: {}", query);
         
         List<ScientificArticle> todos = new ArrayList<>();
@@ -37,13 +44,28 @@ public class ArticleService {
             }
         }
 
-        exportUtil.guardarResultados(new ArrayList<>(unicos), "articulos_unificados.csv");
+        List<ScientificArticle> listaUnicos = new ArrayList<>(unicos);
+
+        // 3. Requerimiento 3: Análisis de Frecuencias (Parte C)
+        Map<String, Integer> frecuencias = frequencyAnalysisService.analizarFrecuencias(listaUnicos);
+
+        // 4. Requerimiento 3: Descubrimiento de Nuevas Palabras (Parte D)
+        Map<String, Integer> nuevasPalabras = keywordDiscoveryService.descubrirNuevasPalabras(listaUnicos, frecuencias.keySet());
+
+        // 5. Requerimiento 3: Evaluación de Precisión (Parte E)
+        double precisionDescubrimiento = keywordDiscoveryService.evaluarPrecision(nuevasPalabras, listaUnicos);
+
+        // 6. Exportación de archivos
+        exportUtil.guardarResultados(listaUnicos, "articulos_unificados.csv");
         exportUtil.guardarResultados(eliminados, "articulos_eliminados.csv");
 
-        Map<String, Integer> resumen = new HashMap<>();
+        Map<String, Object> resumen = new HashMap<>();
         resumen.put("total_procesados", todos.size());
         resumen.put("unicos_guardados", unicos.size());
         resumen.put("eliminados_duplicados", eliminados.size());
+        resumen.put("analisis_frecuencias_base", frecuencias);
+        resumen.put("descubrimiento_nuevas_palabras", nuevasPalabras);
+        resumen.put("precision_descubrimiento_ia", String.format("%.2f%%", precisionDescubrimiento * 100));
 
         log.info("Extracción completada. Únicos: {} | Eliminados: {}", unicos.size(), eliminados.size());
 

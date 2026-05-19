@@ -18,9 +18,15 @@ public class ScienceDirectRepository implements ArticleProvider {
     public List<ScientificArticle> buscarArticulos(String query) {
         log.info("Buscando en ScienceDirect: {}", query);
         return Arrays.asList(
-            new ScientificArticle("1", "Generative AI", Arrays.asList("A"), "...", Arrays.asList("AI"), "ScienceDirect"),
-            new ScientificArticle("2", "Machine Learning", Arrays.asList("B"), "...", Arrays.asList("ML"), "ScienceDirect"),
-            new ScientificArticle("3", "Generative AI", Arrays.asList("A"), "...", Arrays.asList("AI"), "ScienceDirect")
+            new ScientificArticle("1", "Generative AI", Arrays.asList("A"), 
+                "An analysis of generative models in high education.", 
+                Arrays.asList("Generative AI", "Education"), "ScienceDirect"),
+            new ScientificArticle("2", "Machine Learning", Arrays.asList("B"), 
+                "Foundations of machine learning and neural networks.", 
+                Arrays.asList("Machine Learning", "Neural Networks"), "ScienceDirect"),
+            new ScientificArticle("3", "Generative AI", Arrays.asList("A"), 
+                "An analysis of generative models in high education.", 
+                Arrays.asList("Generative AI"), "ScienceDirect")
         );
     }
 
