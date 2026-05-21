@@ -38,4 +38,4 @@ Accede al endpoint de extracción:
 ## 📚 Documentación Técnica
 Para una explicación profunda de los algoritmos y sus ecuaciones de recurrencia, consulta:
 *   [DOCUMENTACION_TECNICA.md](./DOCUMENTACION_TECNICA.md)
-*   [GEMINI.md](./GEMINI.md) (Directrices del proyecto)
+
