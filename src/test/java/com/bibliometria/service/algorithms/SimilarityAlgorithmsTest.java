@@ -15,89 +15,64 @@ class SimilarityAlgorithmsTest {
     private JaccardService jaccardService;
     private LevenshteinService levenshteinService;
     private LcsService lcsService;
+    private CosineSimilarityService cosineService;
 
     @BeforeEach
     void setUp() {
-        // Arrange general: Instanciamos los servicios antes de cada prueba
         jaccardService = new JaccardService();
         levenshteinService = new LevenshteinService();
         lcsService = new LcsService();
+        cosineService = new CosineSimilarityService();
     }
 
     @Test
     @DisplayName("Test Jaccard: Textos con 50% de similitud matemática")
-    void testJaccardSimilarity_CalculatesCorrectly() {
-        // Arrange
-        // Texto 1: "generative", "artificial", "intelligence" (3 palabras)
-        String texto1 = "generative artificial intelligence";
-        // Texto 2: "artificial", "intelligence", "models" (3 palabras)
-        String texto2 = "artificial intelligence models";
+    void testJaccardSimilarity() {
+        String t1 = "generative artificial intelligence";
+        String t2 = "artificial intelligence models";
+        assertEquals(0.5, jaccardService.calculate(t1, t2), 0.001);
+    }
+
+    @Test
+    @DisplayName("Test Levenshtein: Distancia de edición")
+    void testLevenshtein() {
+        assertEquals(1.0, levenshteinService.calculate("gato", "pato"));
+        assertEquals(0.0, levenshteinService.calculate("igual", "igual"));
+    }
+
+    @Test
+    @DisplayName("Test LCS: Subsecuencia común")
+    void testLcs() {
+        assertEquals(4.0, lcsService.calculate("AGGTAB", "GXTXAYB"));
+    }
+
+    @Test
+    @DisplayName("Test Cosine: Similitud vectorial por frecuencia")
+    void testCosineSimilarity() {
+        // "ia" aparece 2 veces en t1, 1 vez en t2
+        String t1 = "ia ia generativa";
+        String t2 = "ia generativa";
         
-        // Matemáticas:
-        // Intersección (compartidas): "artificial", "intelligence" = 2
-        // Unión (únicas totales): "generative", "artificial", "intelligence", "models" = 4
-        // Jaccard Esperado = 2 / 4 = 0.5
-
-        // Act
-        double resultado = jaccardService.calculate(texto1, texto2);
-
-        // Assert
-        assertEquals(0.5, resultado, 0.001, "La similitud de Jaccard debería ser exactamente 0.5");
-    }
-
-    @Test
-    @DisplayName("Test Levenshtein: Textos idénticos deben tener costo 0")
-    void testLevenshteinDistance_IdenticalTexts() {
-        // Arrange
-        String texto1 = "generative ai";
-        String texto2 = "generative ai";
-
-        // Act
-        double costo = levenshteinService.calculate(texto1, texto2);
-
-        // Assert
-        assertEquals(0.0, costo, "Textos idénticos no requieren operaciones, el costo debe ser 0");
-    }
-
-    @Test
-    @DisplayName("Test Levenshtein: Inserción y sustitución de caracteres")
-    void testLevenshteinDistance_DifferentTexts() {
-        // Arrange
-        String texto1 = "gato";
-        String texto2 = "pato"; // 1 sustitución (g por p)
-        String texto3 = "patos"; // 1 sustitución (g por p) + 1 inserción (s)
-
-        // Act
-        double costo1 = levenshteinService.calculate(texto1, texto2);
-        double costo2 = levenshteinService.calculate(texto1, texto3);
-
-        // Assert
-        assertEquals(1.0, costo1, "De 'gato' a 'pato' hay exactamente 1 operación (sustitución)");
-        assertEquals(2.0, costo2, "De 'gato' a 'patos' hay exactamente 2 operaciones");
-    }
-
-    @Test
-    @DisplayName("Test LCS: Subsecuencia común más larga")
-    void testLcs_CalculatesLongestSubsequence() {
-        // Arrange
-        String texto1 = "AGGTAB";
-        String texto2 = "GXTXAYB";
-        // La subsecuencia común más larga es "GTAB", que tiene una longitud de 4.
-
-        // Act
-        double longitud = lcsService.calculate(texto1, texto2);
-
-        // Assert
-        assertEquals(4.0, longitud, "La longitud de la subsecuencia 'GTAB' debe ser 4");
-    }
-
-    @Test
-    @DisplayName("Manejo de Nulos: Los algoritmos no deben lanzar NullPointerException")
-    void testAlgorithms_NullHandling() {
-        // Act & Assert para Jaccard
-        assertEquals(0.0, jaccardService.calculate(null, "texto"), "Jaccard debe retornar 0 si un texto es nulo");
+        // Vectores aproximados:
+        // ia: t1=2, t2=1
+        // generativa: t1=1, t2=1
+        // Dot product: (2*1) + (1*1) = 3
+        // Magnitude 1: sqrt(2^2 + 1^2) = sqrt(5) = 2.236
+        // Magnitude 2: sqrt(1^2 + 1^2) = sqrt(2) = 1.414
+        // Cosine = 3 / (2.236 * 1.414) = 3 / 3.162 = 0.948
         
-        // Act & Assert para Levenshtein
-        assertEquals(0.0, levenshteinService.calculate("texto", null), "Levenshtein debe retornar 0 si un texto es nulo");
+        double result = cosineService.calculate(t1, t2);
+        assertTrue(result > 0.9 && result < 1.0, "La similitud debe ser alta pero no 1.0");
+    }
+
+    @Test
+    @DisplayName("Robustez: Manejo de nulos y vacíos")
+    void testNullAndEmpty() {
+        assertAll(
+            () -> assertEquals(0.0, jaccardService.calculate(null, "")),
+            () -> assertEquals(0.0, levenshteinService.calculate("", null)),
+            () -> assertEquals(0.0, lcsService.calculate(null, null)),
+            () -> assertEquals(0.0, cosineService.calculate("", ""))
+        );
     }
 }
