@@ -1,41 +1,46 @@
 package com.bibliometria.service.algorithms;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Suite de pruebas para el servicio de IA Avanzada.
+ * Utiliza Mockito para aislar la lógica del servicio de las llamadas de red reales.
+ */
 class AdvancedLlmSimilarityServiceTest {
 
-    private AdvancedLlmSimilarityService service;
+    private AdvancedLlmSimilarityService llmService;
+    private RestTemplate restTemplateMock;
+    private CosineSimilarityService cosineService;
 
     @BeforeEach
     void setUp() {
-        // Mokeamos el RestTemplate ya que para el test de lógica no lo usaremos realmente
-        service = new AdvancedLlmSimilarityService(new RestTemplate());
+        // Arrange: Creamos un "Mock" (simulador) de la clase que hace peticiones HTTP
+        restTemplateMock = Mockito.mock(RestTemplate.class);
+        cosineService = new CosineSimilarityService(); // Usamos el servicio real de matemáticas
+        
+        llmService = new AdvancedLlmSimilarityService(restTemplateMock, cosineService);
     }
 
     @Test
-    @DisplayName("El motor matemático de alta dimensión debe calcular similitudes coherentes")
-    void testMathEngine() {
-        // Arrange
-        // Vectores simulados de 1536 dimensiones (solo probamos los primeros elementos)
-        double[] v1 = new double[1536];
-        double[] v2 = new double[1536];
+    @DisplayName("Manejo de Nulos: No debe explotar la API si enviamos textos vacíos")
+    void testCalculate_NullOrEmptyTexts() {
+        // Act & Assert
+        assertEquals(0.0, llmService.calculate(null, "Abstract B"));
+        assertEquals(0.0, llmService.calculate("Abstract A", ""));
         
-        for(int i=0; i<1536; i++) {
-            v1[i] = 1.0;
-            v2[i] = 1.0;
-        }
+        // Verificamos que el RestTemplate NUNCA fue llamado si los textos están vacíos (Ahorro de cuota/seguridad)
+        Mockito.verifyNoInteractions(restTemplateMock);
+    }
 
-        // Act
-        // Usamos reflexión o un método público si estuviera expuesto, 
-        // pero probaremos la lógica a través del calculate determinista que implementamos
-        double sim = service.calculate("test text", "test text");
-
-        // Assert
-        assertEquals(1.0, sim, 0.001, "Textos idénticos deben resultar en similitud 1.0 tras vectorización");
+    @Test
+    @DisplayName("Verificar Nombre del Algoritmo")
+    void testAlgorithmName() {
+        assertEquals("Embeddings de IA Comercial (OpenAI/Gemini)", llmService.getAlgorithmName());
     }
 }

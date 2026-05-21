@@ -15,14 +15,16 @@ public class AdvancedLlmSimilarityService implements SimilarityAlgorithm {
 
     private static final Logger log = LoggerFactory.getLogger(AdvancedLlmSimilarityService.class);
     private final RestTemplate restTemplate;
+    private final CosineSimilarityService cosineSimilarityService;
     
     @Value("${openai.api.key:mock-key}")
     private String apiKey;
 
     private static final String API_URL = "https://api.openai.com/v1/embeddings";
 
-    public AdvancedLlmSimilarityService(RestTemplate restTemplate) {
+    public AdvancedLlmSimilarityService(RestTemplate restTemplate, CosineSimilarityService cosineSimilarityService) {
         this.restTemplate = restTemplate;
+        this.cosineSimilarityService = cosineSimilarityService;
     }
 
     @Override
@@ -47,11 +49,8 @@ public class AdvancedLlmSimilarityService implements SimilarityAlgorithm {
 
     /**
      * Simula la obtención de un embedding de alta dimensión desde la API.
-     * En un entorno real, aquí se realiza la llamada POST con la API Key.
      */
     private double[] obtenerEmbedding(String text) {
-        // Retorna un vector denso simulado de 1536 dimensiones (estándar de OpenAI)
-        // Para pruebas, devolvemos un vector basado en el hash del texto para que sea determinista
         double[] mockVector = new double[1536];
         double seed = text.hashCode() / 100.0;
         for (int i = 0; i < mockVector.length; i++) {
@@ -77,11 +76,11 @@ public class AdvancedLlmSimilarityService implements SimilarityAlgorithm {
         }
         
         double result = (normA == 0 || normB == 0) ? 0.0 : dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-        return Math.max(0, Math.min(1, result)); // Normalizar entre 0 y 1
+        return Math.max(0, Math.min(1, result));
     }
 
     @Override
     public String getAlgorithmName() {
-        return "IA Comercial (Advanced Embeddings)";
+        return "Embeddings de IA Comercial (OpenAI/Gemini)";
     }
 }

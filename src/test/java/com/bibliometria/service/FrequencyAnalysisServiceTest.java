@@ -52,4 +52,41 @@ class FrequencyAnalysisServiceTest {
         Map<String, Integer> result = service.analizarFrecuencias(Collections.singletonList(art));
         assertTrue(result.values().stream().allMatch(v -> v == 0));
     }
+
+    @Test
+    @DisplayName("Debe descubrir bi-gramas y unigramas ignorando stop-words y base")
+    void testDescubrirNuevasPalabras() {
+        // Arrange
+        ScientificArticle art = new ScientificArticle();
+        // "neural networks" es bi-grama, "essential" es unigrama
+        art.setAbstractContent("Neural networks are essential. Neural networks are complex.");
+
+        // Act
+        Map<String, Integer> result = service.descubrirNuevasPalabras(Collections.singletonList(art));
+
+        // Assert
+        assertTrue(result.containsKey("neural networks"), "Debe detectar el bi-grama 'neural networks'");
+        assertEquals(2, result.get("neural networks"), "Debe contar 2 ocurrencias del bi-grama");
+        assertTrue(result.containsKey("essential"), "Debe detectar el unigrama 'essential'");
+        assertFalse(result.containsKey("are"), "No debe incluir stop-words");
+    }
+
+    @Test
+    @DisplayName("Debe calcular el porcentaje de precision correctamente contra las keywords originales")
+    void testCalcularPrecision() {
+        // Arrange
+        Map<String, Integer> nuevasPalabras = new HashMap<>();
+        nuevasPalabras.put("neural", 5);
+        nuevasPalabras.put("transformer", 3);
+
+        ScientificArticle art = new ScientificArticle();
+        art.setKeywords(Arrays.asList("Neural Networks", "Deep Learning"));
+
+        // Act
+        double precision = service.calcularPrecision(nuevasPalabras, Collections.singletonList(art));
+
+        // Assert
+        // Coincide "neural" (desglosado de "Neural Networks") -> 1 de 2 = 50.0
+        assertEquals(50.0, precision, 0.001, "La precisión debería ser 50.0%");
+    }
 }

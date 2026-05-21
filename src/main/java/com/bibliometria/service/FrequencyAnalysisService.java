@@ -19,6 +19,12 @@ public class FrequencyAnalysisService {
         "human ai interaction", "ai literacy", "co creation"
     );
 
+    // Stop-words básicas en inglés para limpiar los abstracts
+    private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
+        "the", "and", "of", "to", "in", "a", "is", "that", "for", "it", "as", 
+        "on", "with", "by", "this", "are", "an", "be", "we", "can", "from"
+    ));
+
     /**
      * Calcula la frecuencia de aparición de las palabras base en todos los abstracts unificados.
      */
@@ -46,6 +52,66 @@ public class FrequencyAnalysisService {
         }
 
         return mapaFrecuencias;
+    }
+
+    /**
+     * Analiza los abstracts y descubre las 15 palabras más frecuentes 
+     * que NO están en la lista base original.
+     */
+    public Map<String, Integer> descubrirNuevasPalabras(List<ScientificArticle> articles) {
+        Map<String, Integer> wordFrequencies = new HashMap<>();
+
+        for (ScientificArticle article : articles) {
+            if (article.getAbstractContent() == null) continue;
+            
+            // Tokenizamos el abstract, limpiando puntuación
+            String[] words = article.getAbstractContent().toLowerCase().split("\\W+");
+            
+            for (String word : words) {
+                // Filtramos: ignorar vacíos, números, stop-words, palabras muy cortas y las palabras base
+                if (word.length() > 2 
+                    && !word.matches(".*\\d.*") 
+                    && !STOP_WORDS.contains(word) 
+                    && !PALABRAS_ASOCIADAS_BASE.contains(word)) {
+                    
+                    wordFrequencies.put(word, wordFrequencies.getOrDefault(word, 0) + 1);
+                }
+            }
+        }
+
+        // Ordenamos el mapa por frecuencia (de mayor a menor) y limitamos a 15
+        return wordFrequencies.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(15) // Restricción del documento: máximo 15 palabras
+                .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
+    }
+
+    /**
+     * Calcula el porcentaje de precisión de las nuevas palabras generadas.
+     * Precisión = (Nuevas palabras que coinciden con las Keywords originales) / (Total de nuevas palabras)
+     */
+    public double calcularPrecision(Map<String, Integer> nuevasPalabras, List<ScientificArticle> articles) {
+        if (nuevasPalabras == null || nuevasPalabras.isEmpty()) return 0.0;
+
+        Set<String> todasLasKeywords = new HashSet<>();
+        for (ScientificArticle article : articles) {
+            if (article.getKeywords() != null) {
+                for (String kw : article.getKeywords()) {
+                    // Normalizamos las keywords para la comparación desglosándolas por palabras
+                    todasLasKeywords.addAll(Arrays.asList(kw.toLowerCase().split("\\W+")));
+                }
+            }
+        }
+
+        int coincidencias = 0;
+        for (String nuevaPalabra : nuevasPalabras.keySet()) {
+            if (todasLasKeywords.contains(nuevaPalabra)) {
+                coincidencias++;
+            }
+        }
+
+        // Retornamos la precisión como un porcentaje (0.0 a 100.0)
+        return ((double) coincidencias / nuevasPalabras.size()) * 100.0;
     }
 
     /**

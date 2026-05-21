@@ -15,16 +15,13 @@ public class ArticleService {
     private final List<ArticleProvider> providers;
     private final FileExportUtil exportUtil;
     private final FrequencyAnalysisService frequencyAnalysisService;
-    private final KeywordDiscoveryService keywordDiscoveryService;
 
     public ArticleService(List<ArticleProvider> providers, 
                           FileExportUtil exportUtil, 
-                          FrequencyAnalysisService frequencyAnalysisService,
-                          KeywordDiscoveryService keywordDiscoveryService) {
+                          FrequencyAnalysisService frequencyAnalysisService) {
         this.providers = providers;
         this.exportUtil = exportUtil;
         this.frequencyAnalysisService = frequencyAnalysisService;
-        this.keywordDiscoveryService = keywordDiscoveryService;
     }
 
     public Map<String, Object> procesarExtraccion(String query) {
@@ -50,10 +47,10 @@ public class ArticleService {
         Map<String, Integer> frecuencias = frequencyAnalysisService.analizarFrecuencias(listaUnicos);
 
         // 4. Requerimiento 3: Descubrimiento de Nuevas Palabras (Parte D)
-        Map<String, Integer> nuevasPalabras = keywordDiscoveryService.descubrirNuevasPalabras(listaUnicos, frecuencias.keySet());
+        Map<String, Integer> nuevasPalabras = frequencyAnalysisService.descubrirNuevasPalabras(listaUnicos);
 
         // 5. Requerimiento 3: Evaluación de Precisión (Parte E)
-        double precisionDescubrimiento = keywordDiscoveryService.evaluarPrecision(nuevasPalabras, listaUnicos);
+        double precision = frequencyAnalysisService.calcularPrecision(nuevasPalabras, listaUnicos);
 
         // 6. Exportación de archivos
         exportUtil.guardarResultados(listaUnicos, "articulos_unificados.csv");
@@ -65,9 +62,9 @@ public class ArticleService {
         resumen.put("eliminados_duplicados", eliminados.size());
         resumen.put("analisis_frecuencias_base", frecuencias);
         resumen.put("descubrimiento_nuevas_palabras", nuevasPalabras);
-        resumen.put("precision_descubrimiento_ia", String.format("%.2f%%", precisionDescubrimiento * 100));
+        resumen.put("precision_descubrimiento_ia", String.format("%.2f%%", precision));
 
-        log.info("Extracción completada. Únicos: {} | Eliminados: {}", unicos.size(), eliminados.size());
+        log.info("Extracción completada. Únicos: {} | Precisión IA: {}%", unicos.size(), String.format("%.2f", precision));
 
         return resumen;
     }
