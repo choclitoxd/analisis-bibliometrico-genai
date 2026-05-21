@@ -16,20 +16,25 @@ public class ScienceDirectRepository implements ArticleProvider {
 
     @Override
     public List<ScientificArticle> buscarArticulos(String query) {
-        log.info("Buscando en ScienceDirect: {}", query);
+        log.info("Simulando búsqueda en ScienceDirect para el dominio: {}", query);
+
         return Arrays.asList(
-            new ScientificArticle("1", "Generative AI", Arrays.asList("A"), 
-                "An analysis of generative models in high education.", 
-                Arrays.asList("Generative AI", "Education"), "ScienceDirect"),
-            new ScientificArticle("2", "Machine Learning", Arrays.asList("B"), 
-                "Foundations of machine learning and neural networks.", 
-                Arrays.asList("Machine Learning", "Neural Networks"), "ScienceDirect"),
-            new ScientificArticle("3", "Generative AI", Arrays.asList("A"), 
-                "An analysis of generative models in high education.", 
-                Arrays.asList("Generative AI"), "ScienceDirect")
+            new ScientificArticle("SD_01", "The Rise of Generative Artificial Intelligence in Research", 
+                Arrays.asList("Smith, J.", "Doe, R."), 
+                "This paper explores how generative artificial intelligence is transforming scientific writing and data analysis.", 
+                Arrays.asList("Generative AI", "Scientific Research", "Ethics"), "ScienceDirect"),
+
+            new ScientificArticle("SD_02", "Large Language Models: A New Era of Generative AI", 
+                Arrays.asList("Johnson, M."), 
+                "An overview of the development of LLMs and their role in the generative artificial intelligence landscape.", 
+                Arrays.asList("LLM", "Generative AI", "NLP"), "ScienceDirect"),
+
+            new ScientificArticle("SD_03", "The Rise of Generative Artificial Intelligence in Research", 
+                Arrays.asList("Smith, J."), 
+                "This paper explores how generative artificial intelligence is transforming scientific writing.", 
+                Arrays.asList("Generative AI"), "ScienceDirect") // Ahora sí es un duplicado por título para probar la lógica
         );
     }
-
     @Override
     public String getSourceName() {
         return "ScienceDirect";

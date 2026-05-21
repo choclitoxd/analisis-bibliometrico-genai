@@ -1,0 +1,28 @@
+# Java y Spring Boot
+bin/
+build/
+.gradle/
+.settings/
+.metadata/
+*.class
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.factorypath
+
+# Seguridad y Configuración (¡NO SUBIR TOKENS!)
+src/main/resources/application.properties
+.env
+
+# Logs
+*.log
+articulos_unificados.csv
+articulos_eliminados.csv
+
+# Sistema
+Thumbs.db
+.DS_Store

@@ -16,9 +16,18 @@ public class AcmRepository implements ArticleProvider {
 
     @Override
     public List<ScientificArticle> buscarArticulos(String query) {
-        log.info("Buscando en ACM Digital Library: {}", query);
+        log.info("Simulando búsqueda en ACM Digital Library para el dominio: {}", query);
+
         return Arrays.asList(
-            new ScientificArticle("ACM_1", "Generative AI in Education", Arrays.asList("C"), "...", Arrays.asList("AI", "Edu"), "ACM")
+            new ScientificArticle("ACM_01", "Impact of Generative Artificial Intelligence in Computer Science Education", 
+                Arrays.asList("White, L.", "Brown, T."), 
+                "Analysis of how students use prompting and generative models in programming courses.", 
+                Arrays.asList("Generative AI", "Education", "Prompting"), "ACM"),
+            
+            new ScientificArticle("ACM_02", "Ethical Challenges of Generative Artificial Intelligence", 
+                Arrays.asList("Garcia, S."), 
+                "A study on algorithmic bias and transparency in generative artificial intelligence systems.", 
+                Arrays.asList("Ethics", "Transparency", "Generative AI"), "ACM")
         );
     }
 
