@@ -15,13 +15,16 @@ public class ArticleService {
     private final List<ArticleProvider> providers;
     private final FileExportUtil exportUtil;
     private final FrequencyAnalysisService frequencyAnalysisService;
+    private final AnalyticsService analyticsService;
 
     public ArticleService(List<ArticleProvider> providers, 
                           FileExportUtil exportUtil, 
-                          FrequencyAnalysisService frequencyAnalysisService) {
+                          FrequencyAnalysisService frequencyAnalysisService,
+                          AnalyticsService analyticsService) {
         this.providers = providers;
         this.exportUtil = exportUtil;
         this.frequencyAnalysisService = frequencyAnalysisService;
+        this.analyticsService = analyticsService;
     }
 
     public Map<String, Object> procesarExtraccion(String query) {
@@ -52,7 +55,11 @@ public class ArticleService {
         // 5. Requerimiento 3: Evaluación de Precisión (Parte E)
         double precision = frequencyAnalysisService.calcularPrecision(nuevasPalabras, listaUnicos);
 
-        // 6. Exportación de archivos
+        // 6. Fase de Visualización (Data Prep)
+        Map<String, Integer> datosGeograficos = analyticsService.generarDatosGeograficos(listaUnicos);
+        Map<Integer, Map<String, Long>> datosTemporales = analyticsService.generarDatosTemporales(listaUnicos);
+
+        // 7. Exportación de archivos
         exportUtil.guardarResultados(listaUnicos, "articulos_unificados.csv");
         exportUtil.guardarResultados(eliminados, "articulos_eliminados.csv");
 
@@ -63,6 +70,10 @@ public class ArticleService {
         resumen.put("analisis_frecuencias_base", frecuencias);
         resumen.put("descubrimiento_nuevas_palabras", nuevasPalabras);
         resumen.put("precision_descubrimiento_ia", String.format("%.2f%%", precision));
+        
+        // Datos para Visualización
+        resumen.put("visualizacion_geografica", datosGeograficos);
+        resumen.put("visualizacion_temporal", datosTemporales);
 
         log.info("Extracción completada. Únicos: {} | Precisión IA: {}%", unicos.size(), String.format("%.2f", precision));
 

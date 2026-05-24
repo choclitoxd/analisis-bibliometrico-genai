@@ -18,6 +18,15 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    
+    // Cambios en caliente (Hot Reload)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    
+    // Generación de PDF (Flying Saucer + OpenPDF)
+    implementation 'org.xhtmlrenderer:flying-saucer-pdf-openpdf:9.1.22'
+    implementation 'com.github.librepdf:openpdf:1.3.30'
+    
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

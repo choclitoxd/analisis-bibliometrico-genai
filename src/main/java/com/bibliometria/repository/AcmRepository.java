@@ -21,13 +21,13 @@ public class AcmRepository implements ArticleProvider {
         return Arrays.asList(
             new ScientificArticle("ACM_01", "Impact of Generative Artificial Intelligence in Computer Science Education", 
                 Arrays.asList("White, L.", "Brown, T."), 
-                "Analysis of how students use prompting and generative models in programming courses.", 
-                Arrays.asList("Generative AI", "Education", "Prompting"), "ACM"),
+                "Analysis of how students use prompting and generative models in programming courses in UK.", 
+                Arrays.asList("Generative AI", "Education", "Prompting"), "ACM", 2024),
             
             new ScientificArticle("ACM_02", "Ethical Challenges of Generative Artificial Intelligence", 
                 Arrays.asList("Garcia, S."), 
-                "A study on algorithmic bias and transparency in generative artificial intelligence systems.", 
-                Arrays.asList("Ethics", "Transparency", "Generative AI"), "ACM")
+                "A study on algorithmic bias and transparency in generative artificial intelligence systems in Spain.", 
+                Arrays.asList("Ethics", "Transparency", "Generative AI"), "ACM", 2022)
         );
     }
 

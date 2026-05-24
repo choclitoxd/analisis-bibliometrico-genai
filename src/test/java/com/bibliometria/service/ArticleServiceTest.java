@@ -20,25 +20,28 @@ class ArticleServiceTest {
     private List<ArticleProvider> providers;
     private FileExportUtil exportUtil;
     private FrequencyAnalysisService frequencyService;
+    private AnalyticsService analyticsService;
 
     @BeforeEach
     void setUp() {
         exportUtil = Mockito.mock(FileExportUtil.class);
         frequencyService = Mockito.mock(FrequencyAnalysisService.class);
+        analyticsService = Mockito.mock(AnalyticsService.class);
         
         ArticleProvider providerMock = Mockito.mock(ArticleProvider.class);
         providers = Collections.singletonList(providerMock);
         
-        // Mocking provider behavior
+        // Simulación de comportamiento del proveedor
         ScientificArticle a1 = new ScientificArticle(); a1.setTitle("T1");
-        ScientificArticle a2 = new ScientificArticle(); a2.setTitle("T1"); // Duplicado
+        ScientificArticle a2 = new ScientificArticle(); a2.setTitle("T1"); // Duplicado intencional
         when(providerMock.buscarArticulos(anyString())).thenReturn(Arrays.asList(a1, a2));
         
-        articleService = new ArticleService(providers, exportUtil, frequencyService);
+        // Constructor actualizado con AnalyticsService
+        articleService = new ArticleService(providers, exportUtil, frequencyService, analyticsService);
     }
 
     @Test
-    @DisplayName("Orquestación: Debe procesar, deduplicar y retornar el resumen")
+    @DisplayName("Orquestación: Debe procesar, deduplicar y retornar el resumen completo")
     void testProcesarExtraccion() {
         // Act
         Map<String, Object> result = articleService.procesarExtraccion("query");
@@ -48,5 +51,7 @@ class ArticleServiceTest {
         assertEquals(2, result.get("total_procesados"));
         assertEquals(1, result.get("unicos_guardados"));
         assertEquals(1, result.get("eliminados_duplicados"));
+        assertTrue(result.containsKey("visualizacion_geografica"), "Debe incluir datos para el mapa de calor");
+        assertTrue(result.containsKey("visualizacion_temporal"), "Debe incluir datos para la línea de tiempo");
     }
 }

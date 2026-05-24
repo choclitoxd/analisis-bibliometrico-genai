@@ -12,16 +12,18 @@ public class ScientificArticle {
     private String abstractContent;
     private List<String> keywords;
     private String source;
+    private int publicationYear;
 
     public ScientificArticle() {}
 
-    public ScientificArticle(String id, String title, List<String> authors, String abstractContent, List<String> keywords, String source) {
+    public ScientificArticle(String id, String title, List<String> authors, String abstractContent, List<String> keywords, String source, int publicationYear) {
         this.id = id;
         this.title = title;
         this.authors = authors;
         this.abstractContent = abstractContent;
         this.keywords = keywords;
         this.source = source;
+        this.publicationYear = publicationYear;
     }
 
     // Getters y Setters simplificados
@@ -37,6 +39,8 @@ public class ScientificArticle {
     public void setKeywords(List<String> keywords) { this.keywords = keywords; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+    public int getPublicationYear() { return publicationYear; }
+    public void setPublicationYear(int publicationYear) { this.publicationYear = publicationYear; }
 
     @Override
     public boolean equals(Object o) {
