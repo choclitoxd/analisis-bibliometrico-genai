@@ -103,7 +103,11 @@ public class ClusteringEvaluatorService {
         double numerator = (n * sumXY) - (sumX * sumY);
         double denominator = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
 
-        if (denominator == 0) return 0.0;
+        if (denominator == 0) {
+            // Si el denominador es 0, los vectores son constantes.
+            // Si son idénticos, la correlación es 1.0 para efectos de esta evaluación.
+            return x.equals(y) ? 1.0 : 0.0;
+        }
         return numerator / denominator;
     }
 }

@@ -64,6 +64,7 @@ public class ArticleService {
         exportUtil.guardarResultados(eliminados, "articulos_eliminados.csv");
 
         Map<String, Object> resumen = new HashMap<>();
+        resumen.put("query", query);
         resumen.put("total_procesados", todos.size());
         resumen.put("unicos_guardados", unicos.size());
         resumen.put("eliminados_duplicados", eliminados.size());

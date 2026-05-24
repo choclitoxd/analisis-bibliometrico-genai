@@ -55,7 +55,7 @@ public class FrequencyAnalysisService {
     }
 
     /**
-     * Analiza los abstracts y descubre las 15 palabras más frecuentes 
+     * Analiza los abstracts y descubre las 15 palabras (unigramas y bi-gramas) más frecuentes 
      * que NO están en la lista base original.
      */
     public Map<String, Integer> descubrirNuevasPalabras(List<ScientificArticle> articles) {
@@ -66,15 +66,30 @@ public class FrequencyAnalysisService {
             
             // Tokenizamos el abstract, limpiando puntuación
             String[] words = article.getAbstractContent().toLowerCase().split("\\W+");
-            
+            List<String> validWords = new ArrayList<>();
+
+            // 1. Procesar unigramas y recolectar palabras válidas para bi-gramas
             for (String word : words) {
-                // Filtramos: ignorar vacíos, números, stop-words, palabras muy cortas y las palabras base
                 if (word.length() > 2 
                     && !word.matches(".*\\d.*") 
-                    && !STOP_WORDS.contains(word) 
-                    && !PALABRAS_ASOCIADAS_BASE.contains(word)) {
+                    && !STOP_WORDS.contains(word)) {
                     
-                    wordFrequencies.put(word, wordFrequencies.getOrDefault(word, 0) + 1);
+                    validWords.add(word);
+                    
+                    // Solo agregar al mapa si no es una palabra base
+                    if (!PALABRAS_ASOCIADAS_BASE.contains(word)) {
+                        wordFrequencies.put(word, wordFrequencies.getOrDefault(word, 0) + 1);
+                    }
+                }
+            }
+
+            // 2. Procesar bi-gramas (N-gramas de tamaño 2)
+            for (int i = 0; i < validWords.size() - 1; i++) {
+                String bigram = validWords.get(i) + " " + validWords.get(i + 1);
+                
+                // Solo agregar si no es una palabra base (ej. "generative models" ya está en la base)
+                if (!PALABRAS_ASOCIADAS_BASE.contains(bigram)) {
+                    wordFrequencies.put(bigram, wordFrequencies.getOrDefault(bigram, 0) + 1);
                 }
             }
         }
@@ -82,7 +97,7 @@ public class FrequencyAnalysisService {
         // Ordenamos el mapa por frecuencia (de mayor a menor) y limitamos a 15
         return wordFrequencies.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(15) // Restricción del documento: máximo 15 palabras
+                .limit(15)
                 .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
     }
 

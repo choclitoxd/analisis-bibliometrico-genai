@@ -20,8 +20,9 @@ src/main/resources/application.properties
 
 # Logs
 *.log
-articulos_unificados.csv
-articulos_eliminados.csv
+
+# Persistencia Local (Excluido de Git)
+persistencia/
 
 # Sistema
 Thumbs.db

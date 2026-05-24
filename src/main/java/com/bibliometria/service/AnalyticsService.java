@@ -16,9 +16,9 @@ public class AnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
 
-    // Lista simplificada de países para demostración de extracción geográfica
+    // Lista simplificada de países con nombres estándar para compatibilidad con Mapas GeoJSON
     private static final List<String> PAISES = Arrays.asList(
-        "USA", "China", "UK", "Spain", "Germany", "France", "Japan", "Colombia", "Brazil"
+        "United States", "China", "United Kingdom", "Spain", "Germany", "France", "Japan", "Colombia", "Brazil", "India", "Canada", "Australia"
     );
 
     /**
@@ -29,9 +29,24 @@ public class AnalyticsService {
         log.info("Generando datos geográficos para {} artículos.", articulos.size());
         Map<String, Integer> conteoPaises = new HashMap<>();
 
+        // Mapeo de términos comunes a nombres estándar de ECharts
+        Map<String, String> aliasPaises = new HashMap<>();
+        aliasPaises.put("USA", "United States");
+        aliasPaises.put("UNITED STATES", "United States");
+        aliasPaises.put("UK", "United Kingdom");
+        aliasPaises.put("UNITED KINGDOM", "United Kingdom");
+
         for (ScientificArticle art : articulos) {
             String textoParaAnalisis = (art.getAbstractContent() + " " + String.join(" ", art.getAuthors())).toUpperCase();
             
+            // 1. Buscar coincidencias por Alias
+            for (Map.Entry<String, String> entry : aliasPaises.entrySet()) {
+                if (textoParaAnalisis.contains(entry.getKey())) {
+                    conteoPaises.put(entry.getValue(), conteoPaises.getOrDefault(entry.getValue(), 0) + 1);
+                }
+            }
+
+            // 2. Buscar coincidencias por Nombre Estándar
             for (String pais : PAISES) {
                 if (textoParaAnalisis.contains(pais.toUpperCase())) {
                     conteoPaises.put(pais, conteoPaises.getOrDefault(pais, 0) + 1);

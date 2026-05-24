@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
  * Controlador principal para la extracción de datos y generación de reportes.
  */
 @RestController
-@RequestMapping("/api/bibliometria")
 public class ExtractionController {
 
     private static final Logger log = LoggerFactory.getLogger(ExtractionController.class);
@@ -25,9 +24,17 @@ public class ExtractionController {
     }
 
     /**
+     * Redirección automática a la página del Dashboard al entrar a la raíz.
+     */
+    @GetMapping("/")
+    public org.springframework.web.servlet.ModelAndView home() {
+        return new org.springframework.web.servlet.ModelAndView("redirect:/api/bibliometria/dashboard");
+    }
+
+    /**
      * Endpoint para ejecutar la extracción y obtener resumen en JSON.
      */
-    @GetMapping("/extraer")
+    @GetMapping("/api/bibliometria/extraer")
     public ResponseEntity<Map<String, Object>> extraer(@RequestParam String query) {
         try {
             Map<String, Object> resultado = articleService.procesarExtraccion(query);
@@ -41,7 +48,7 @@ public class ExtractionController {
     /**
      * Endpoint para visualizar el Dashboard interactivo en el navegador.
      */
-    @GetMapping("/dashboard")
+    @GetMapping("/api/bibliometria/dashboard")
     public org.springframework.web.servlet.ModelAndView mostrarDashboard(
             @RequestParam(defaultValue = "generative artificial intelligence") String query) {
         Map<String, Object> resultado = articleService.procesarExtraccion(query);
@@ -53,7 +60,7 @@ public class ExtractionController {
     /**
      * Endpoint para exportar y descargar el reporte analítico en PDF.
      */
-    @GetMapping("/reporte/pdf")
+    @GetMapping("/api/bibliometria/reporte/pdf")
     public ResponseEntity<byte[]> descargarReportePdf(
             @RequestParam(defaultValue = "generative artificial intelligence") String query) {
         try {
