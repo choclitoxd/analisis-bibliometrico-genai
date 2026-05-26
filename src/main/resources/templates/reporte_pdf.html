@@ -22,9 +22,9 @@
 
     <div class="section-title">RESUMEN DE EXTRACCIÓN</div>
     <div class="stat-box">
-        <p><strong>Total de artículos procesados:</strong> <span th:text="${resumen.total_procesados}"></span></p>
-        <p><strong>Artículos únicos (unificados):</strong> <span th:text="${resumen.unicos_guardados}"></span></p>
-        <p><strong>Precisión del descubrimiento (IA):</strong> <span th:text="${resumen.precision_descubrimiento_ia}"></span></p>
+        <p><strong>Total de artículos procesados:</strong> <span th:text="${total_procesados}"></span></p>
+        <p><strong>Artículos únicos (unificados):</strong> <span th:text="${unicos_guardados}"></span></p>
+        <p><strong>Precisión del descubrimiento (IA):</strong> <span th:text="${precision_descubrimiento_ia}"></span></p>
     </div>
 
     <div class="section-title">CONCEPTOS EMERGENTES DETECTADOS (NLP)</div>
@@ -36,7 +36,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="entry : ${resumen.descubrimiento_nuevas_palabras}">
+            <tr th:each="entry : ${descubrimiento_nuevas_palabras}">
                 <td th:text="${entry.key}"></td>
                 <td th:text="${entry.value}"></td>
             </tr>
@@ -52,7 +52,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="entry : ${resumen.visualizacion_geografica}">
+            <tr th:each="entry : ${visualizacion_geografica}">
                 <td th:text="${entry.key}"></td>
                 <td th:text="${entry.value}"></td>
             </tr>

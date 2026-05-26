@@ -1,90 +1,88 @@
 package com.bibliometria.service.algorithms;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.*;
 
 /**
  * Servicio de similitud utilizando Modelos de Lenguaje de Hugging Face.
- * Obtiene embeddings de texto y calcula su similitud cosenoidal.
+ * Implementación de bajo nivel (Java HttpClient) para bypass de errores de MimeType de Spring 2026.
  */
 @Service
 public class HuggingFaceSimilarityService implements SimilarityAlgorithm {
 
     private static final Logger log = LoggerFactory.getLogger(HuggingFaceSimilarityService.class);
     
-    private final RestTemplate restTemplate;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
     
-    // URL del modelo en Hugging Face (Sentence Transformers)
-    private final String API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2";
+    // URL del Router de Hugging Face (Estable en 2026)
+    private final String API_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2";
     
     @Value("${huggingface.api.token:none}")
     private String apiToken;
 
-    public HuggingFaceSimilarityService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public HuggingFaceSimilarityService() {
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public double calculate(String text1, String text2) {
-        if (text1 == null || text2 == null || text1.isEmpty() || text2.isEmpty()) return 0.0;
+        if (text1 == null || text2 == null || text1.trim().isEmpty() || text2.trim().isEmpty()) {
+            return 0.0;
+        }
 
         try {
-            // 1. Obtener embeddings para ambos textos
-            double[] embedding1 = fetchEmbedding(text1);
-            double[] embedding2 = fetchEmbedding(text2);
+            // Estructura de la petición
+            Map<String, Object> inputs = new HashMap<>();
+            inputs.put("source_sentence", text1);
+            inputs.put("sentences", Collections.singletonList(text2));
+            
+            String jsonBody = objectMapper.writeValueAsString(Collections.singletonMap("inputs", inputs));
 
-            // 2. Calcular similitud del coseno entre los vectores
-            return calculateCosineSimilarity(embedding1, embedding2);
+            // Construcción manual de la petición HTTP para evitar validaciones de Spring
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_URL))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + apiToken)
+                    .header("X-Wait-For-Model", "true")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            // Enviamos y recibimos como String
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                // Parseo manual del array [0.85, ...]
+                double[] results = objectMapper.readValue(response.body(), double[].class);
+                if (results != null && results.length > 0) {
+                    return Math.max(0, Math.min(1, results[0]));
+                }
+            } else {
+                log.warn("Hugging Face respondió con código {}: {}", response.statusCode(), response.body());
+            }
             
         } catch (Exception e) {
-            log.error("Error al consultar Hugging Face AI: {}", e.getMessage());
-            return 0.0; // Fallback en caso de error de red o cuota
-        }
-    }
-
-    private double[] fetchEmbedding(String text) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        if (!"none".equals(apiToken)) {
-            headers.setBearerAuth(apiToken);
-        }
-
-        Map<String, String> body = new HashMap<>();
-        body.put("inputs", text);
-
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
-        
-        // La API de Hugging Face para este modelo devuelve un arreglo de dobles
-        ResponseEntity<double[]> response = restTemplate.postForEntity(API_URL, entity, double[].class);
-        
-        return response.getBody();
-    }
-
-    private double calculateCosineSimilarity(double[] v1, double[] v2) {
-        if (v1 == null || v2 == null || v1.length != v2.length) return 0.0;
-
-        double dotProduct = 0;
-        double normA = 0;
-        double normB = 0;
-        
-        for (int i = 0; i < v1.length; i++) {
-            dotProduct += v1[i] * v2[i];
-            normA += Math.pow(v1[i], 2);
-            normB += Math.pow(v2[i], 2);
+            log.error("Error crítico en Hugging Face (HttpClient 2026): {}", e.getMessage());
         }
         
-        double result = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-        return Math.max(0, Math.min(1, result)); // Normalizar entre 0 y 1
+        return 0.0;
     }
 
     @Override
     public String getAlgorithmName() {
-        return "IA Hugging Face (Embeddings + Coseno)";
+        return "IA Hugging Face (Sentence-Similarity 2026)";
     }
 }

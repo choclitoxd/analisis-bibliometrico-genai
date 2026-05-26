@@ -20,8 +20,8 @@ public class GeminiSimilarityService implements SimilarityAlgorithm {
     
     private final RestTemplate restTemplate;
     
-    // URL de la API de Gemini para Embeddings
-    private final String API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
+    // URL base de la API de Gemini para modelos de lenguaje
+    private final String API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
     
     @Value("${gemini.api.token:none}")
     private String apiToken;
@@ -32,7 +32,9 @@ public class GeminiSimilarityService implements SimilarityAlgorithm {
 
     @Override
     public double calculate(String text1, String text2) {
-        if (text1 == null || text2 == null || text1.isEmpty() || text2.isEmpty()) return 0.0;
+        if (text1 == null || text2 == null || text1.trim().isEmpty() || text2.trim().isEmpty()) {
+            return 0.0;
+        }
 
         try {
             // 1. Obtener embeddings de Gemini
@@ -49,7 +51,8 @@ public class GeminiSimilarityService implements SimilarityAlgorithm {
     }
 
     private double[] fetchGeminiEmbedding(String text) {
-        String url = API_BASE_URL + "?key=" + apiToken;
+        // El modelo verificado en tu API Key es gemini-embedding-001
+        String url = String.format("%s/models/gemini-embedding-001:embedContent?key=%s", API_BASE_URL, apiToken);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,23 +64,25 @@ public class GeminiSimilarityService implements SimilarityAlgorithm {
         content.put("parts", Collections.singletonList(part));
 
         Map<String, Object> body = new HashMap<>();
+        body.put("model", "models/gemini-embedding-001");
         body.put("content", content);
+        body.put("task_type", "SEMANTIC_SIMILARITY");
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
         
         ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
         
-        if (response.getBody() != null) {
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             Map<String, Object> embeddingMap = (Map<String, Object>) response.getBody().get("embedding");
-            List<Double> values = (List<Double>) embeddingMap.get("values");
-            return values.stream().mapToDouble(Double::doubleValue).toArray();
+            List<Number> values = (List<Number>) embeddingMap.get("values");
+            return values.stream().mapToDouble(Number::doubleValue).toArray();
         }
         
         return new double[0];
     }
 
     private double calculateCosineSimilarity(double[] v1, double[] v2) {
-        if (v1 == null || v2 == null || v1.length != v2.length) return 0.0;
+        if (v1 == null || v2 == null || v1.length == 0 || v1.length != v2.length) return 0.0;
 
         double dotProduct = 0;
         double normA = 0;
@@ -88,6 +93,8 @@ public class GeminiSimilarityService implements SimilarityAlgorithm {
             normA += Math.pow(v1[i], 2);
             normB += Math.pow(v2[i], 2);
         }
+        
+        if (normA == 0 || normB == 0) return 0.0;
         
         double result = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         return Math.max(0, Math.min(1, result));
